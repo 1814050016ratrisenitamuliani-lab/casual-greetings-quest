@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Greeting Quest — Casual Greetings</title>
+<style>
+:root{
+  --bg:#08111f; --panel:#101c2f; --panel2:#15243a; --text:#f5f8ff;
+  --muted:#a9b8cc; --accent:#ffd34d; --green:#45d483; --red:#ff6b6b;
+  --blue:#59b9ff; --purple:#a982ff; --shadow:0 12px 30px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:linear-gradient(#6ecbff 0 35%,#8ed56b 35% 100%);color:#172033;min-height:100vh}
+button{font:inherit;border:0;cursor:pointer}
+.topbar{position:sticky;top:0;z-index:20;background:#0b1220;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;box-shadow:0 5px 18px #0004}
+.logo{font-weight:900;letter-spacing:.5px}.stats{display:flex;gap:12px;font-weight:800;font-size:14px}
+.app{max-width:1050px;margin:auto;padding:16px}
+.screen{display:none}.screen.active{display:block}
+.card{background:rgba(255,255,255,.96);border-radius:22px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px}
+.hero{background:linear-gradient(135deg,#162b4a,#263d69);color:#fff;overflow:hidden;position:relative}
+.hero h1{font-size:clamp(30px,6vw,54px);margin:4px 0}.hero p{color:#d8e7ff}
+.badge{display:inline-flex;padding:6px 10px;border-radius:999px;background:#ffffff18;border:1px solid #ffffff30;font-size:12px;font-weight:800}
+.primary{background:#ffd34d;color:#171717;padding:13px 18px;border-radius:14px;font-weight:900}
+.secondary{background:#e9f2ff;color:#17304f;padding:12px 16px;border-radius:14px;font-weight:800}
+.darkbtn{background:#15243a;color:#fff;padding:12px 16px;border-radius:14px;font-weight:800}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.map{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.location{min-height:150px;border-radius:22px;padding:18px;color:#fff;text-align:left;position:relative;overflow:hidden;box-shadow:var(--shadow);transition:.2s}
+.location:hover{transform:translateY(-3px)} .location.locked{filter:grayscale(.65);opacity:.65;cursor:not-allowed}
+.location .emoji{font-size:44px}.location h3{margin:5px 0}.location p{margin:0;color:#e8f4ff;font-size:13px}
+.forest{background:linear-gradient(145deg,#176b4a,#3aaf6d)} .camp{background:linear-gradient(145deg,#175b9b,#3bb8e9)}
+.practice{background:linear-gradient(145deg,#6a3a9e,#a86fe0)} .school{background:linear-gradient(145deg,#9a5b18,#e9a43d)}
+.festival{background:linear-gradient(145deg,#a12f52,#ed6b91)} .mapquest{background:linear-gradient(145deg,#38435c,#697a9c)}
+.progress{height:12px;background:#dbe6f2;border-radius:999px;overflow:hidden;margin:10px 0}.progress>i{display:block;height:100%;background:#45d483;width:0;transition:.4s}
+.back{margin-bottom:12px}
+.instruction{background:#eef7ff;border-left:5px solid #59b9ff;padding:14px;border-radius:14px;line-height:1.55}
+.videoWrap{position:relative;width:100%;aspect-ratio:16/9;background:#111;border-radius:18px;overflow:hidden;margin:15px 0}
+.videoCard{display:flex;gap:18px;align-items:center;background:#202020;color:#fff;border-radius:18px;padding:22px;margin:18px 0;min-height:190px}.videoIcon{width:76px;height:76px;border-radius:50%;background:#fff;color:#d00;display:grid;place-items:center;font-size:34px;font-weight:900;flex:none}.videoCard h3{margin:0 0 8px}.videoCard p{color:#d8d8d8}.videoLink{display:inline-block;text-decoration:none;margin-top:8px}.progressText{margin-top:12px;font-weight:900;color:#17456c}
+.videoWrap iframe{width:100%;height:100%;border:0}
+.mission{background:#fff9df;border:2px solid #ffe27a;padding:16px;border-radius:16px}
+.mission h3{margin-top:0}.steps{display:grid;gap:10px}.step{padding:12px;border:1px solid #dbe5ef;border-radius:14px;background:#fff}
+.choiceGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.choice{padding:15px;border:2px solid #dbe5ef;background:#fff;border-radius:14px;text-align:left;font-weight:800}
+.choice.correct{border-color:#45d483;background:#eafff3}.choice.wrong{border-color:#ff6b6b;background:#fff0f0}
+.feedback{padding:14px;border-radius:14px;margin-top:12px;font-weight:800}.good{background:#eafff3;color:#12653b}.bad{background:#fff0f0;color:#8c2222}.info{background:#eef5ff;color:#174d80}
+.speakBox{background:#0d1929;color:#fff;border-radius:22px;padding:20px;box-shadow:var(--shadow)}
+.target{font-size:clamp(25px,5vw,40px);font-weight:900;text-align:center;padding:18px;color:#ffd34d}
+.instructionSpeak{text-align:center;color:#d5e4f8;line-height:1.5}
+.recordBtn{width:120px;height:120px;border-radius:50%;background:#ff5c66;color:#fff;font-size:40px;box-shadow:0 0 0 10px #ff5c6625;margin:12px auto;display:block}
+.recordBtn.recording{animation:pulse 1s infinite;background:#d82c3b}
+@keyframes pulse{50%{transform:scale(1.08);box-shadow:0 0 0 20px #ff5c6620}}
+.timer{text-align:center;font-weight:900;color:#ffd34d}.transcript{background:#17263b;border-radius:14px;padding:13px;min-height:52px;margin-top:12px;color:#dce9f8}
+.scoreBox{text-align:center;padding:18px;border-radius:18px;background:#14243b;color:#fff}.scoreNum{font-size:48px;font-weight:900;color:#ffd34d}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}.person{border:2px solid #dce6f0;border-radius:16px;padding:15px}.person h3{margin-top:0}
+textarea{width:100%;min-height:100px;border:2px solid #dce5ef;border-radius:14px;padding:12px;font:inherit;resize:vertical}
+.small{font-size:13px;color:#66778c}.hidden{display:none!important}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#0d1929;color:#fff;padding:12px 16px;border-radius:999px;z-index:50;display:none}
+@media(max-width:700px){.map{grid-template-columns:1fr 1fr}.pair{grid-template-columns:1fr}.choiceGrid{grid-template-columns:1fr}.app{padding:10px}.card{padding:16px}}
+@media(max-width:450px){.map{grid-template-columns:1fr}.stats{gap:6px;font-size:12px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">🎮 GREETING QUEST</div>
+  <div class="stats"><span>⭐ <b id="xp">0</b> XP</span><span>🏅 <b id="badges">0</b></span></div>
+</header>
+
+<main class="app">
+
+<section id="home" class="screen active">
+  <div class="card hero">
+    <span class="badge">CASUAL GREETINGS • SPEAKING ADVENTURE</span>
+    <h1>Greeting Quest</h1>
+    <p>Explore the map, watch a real conversation, then prove you can use casual greetings out loud.</p>
+    <div class="row"><button class="primary" onclick="startQuest()">▶ Start Adventure</button><button class="secondary" onclick="show('guide')">📖 How to Play</button></div>
+  </div>
+  <div class="card">
+    <h2>🗺️ Your Adventure Map</h2>
+    <div class="progress"><i id="mapProgress"></i></div>
+    <p class="small" id="progressText">Complete missions to unlock the next location.</p>
+    <div class="map">
+      <button class="location forest" onclick="show('forest')"><div class="emoji">🌳</div><h3>Greeting Forest</h3><p>Discover casual greetings.</p></button>
+      <button class="location camp" onclick="show('video')"><div class="emoji">📺</div><h3>Video Camp</h3><p>Watch & notice the expressions.</p></button>
+      <button class="location practice locked" id="practiceLoc" onclick="openPractice()"><div class="emoji">🎤</div><h3>Practice Camp</h3><p>Speak the greetings aloud.</p></button>
+      <button class="location school locked" id="pairLoc" onclick="openPair()"><div class="emoji">🤝</div><h3>Buddy School</h3><p>Build a mini conversation.</p></button>
+      <button class="location festival locked" id="finishLoc" onclick="show('festival')"><div class="emoji">🏆</div><h3>Greeting Festival</h3><p>Complete your final challenge.</p></button>
+      <button class="location mapquest" onclick="show('guide')"><div class="emoji">🧭</div><h3>Quest Guide</h3><p>Need help? See the mission rules.</p></button>
+    </div>
+  </div>
+</section>
+
+<section id="guide" class="screen">
+  <div class="card">
+    <button class="secondary back" onclick="show('home')">← Map</button>
+    <h2>🧭 Quest Guide</h2>
+    <div class="steps">
+      <div class="step"><b>1. Watch</b><br>Watch only the conversation clip. Listen for casual greetings and how the speakers respond.</div>
+      <div class="step"><b>2. Notice</b><br>Look for expressions such as <b>Hi, Hey, What's up?, How's it going?, How are you doing?, What's new?</b></div>
+      <div class="step"><b>3. Speak</b><br>Read the target sentence, tap the microphone, say it naturally, then stop. The game transcribes your speech and gives an approximate pronunciation score.</div>
+      <div class="step"><b>4. Buddy Talk</b><br>Work with a partner. Choose roles A and B, then perform the dialogue aloud.</div>
+      <div class="step"><b>5. Unlock</b><br>Earn XP and badges by completing missions.</div>
+    </div>
+  </div>
+</section>
+
+<section id="forest" class="screen">
+  <div class="card">
+    <button class="secondary back" onclick="show('home')">← Map</button>
+    <span class="badge" style="background:#e9fff2;color:#12653b">MISSION 1</span>
+    <h2>🌳 Greeting Forest</h2>
+    <div class="instruction"><b>Your mission:</b> Learn the difference between a greeting and a response. Choose the response that sounds natural in a casual conversation.</div>
+    <div id="quizArea"></div>
+  </div>
+</section>
+
+<section id="video" class="screen">
+  <div class="card">
+    <button class="secondary back" onclick="show('home')">← Map</button>
+    <span class="badge" style="background:#e9f5ff;color:#145985">MISSION 2</span>
+    <h2>📺 Video Camp</h2>
+    <div class="mission">
+      <h3>🎯 Watch Mission</h3>
+      <p>Before pressing play, know what you are looking for:</p>
+      <ol>
+        <li>Listen for <b>casual greetings</b>.</li>
+        <li>Write down <b>two greetings</b> you hear.</li>
+        <li>Notice <b>how the other person responds</b>.</li>
+      </ol>
+    </div>
+    <div class="videoCard">
+      <div class="videoIcon">▶</div>
+      <div>
+        <h3>Watch the Casual Greetings video</h3>
+        <p>Tap the button below. The video opens directly on YouTube at the part you need.</p>
+        <a class="primary videoLink" href="https://www.youtube.com/watch?v=orWL34vG3tY&t=33s" target="_blank" rel="noopener">▶ Watch on YouTube</a>
+      </div>
+    </div>
+    <div class="mission" style="margin-top:12px">
+      <b>After watching:</b> choose <strong>TWO</strong> casual greetings. You need <strong>2 correct answers</strong> to clear this mission.
+      <div id="videoProgress" class="progressText">0 / 2 correct greetings</div>
+    </div>
+    <div class="mission">
+      <b>Quick Check</b>
+      <p>Which TWO expressions are casual greetings?</p>
+      <div class="choiceGrid" id="videoChoices"></div>
+      <div id="videoFeedback"></div>
+    </div>
+  </div>
+</section>
+
+<section id="practice" class="screen">
+  <div class="card">
+    <button class="secondary back" onclick="show('home')">← Map</button>
+    <span class="badge" style="background:#f3ebff;color:#6639a0">MISSION 3 • SPEAKING</span>
+    <h2>🎤 Practice Camp</h2>
+    <div class="instruction"><b>Duolingo-style mission:</b> Look at the sentence. Tap 🎙️. Say the sentence naturally. Tap again to stop. The game compares what the browser heard with the target sentence.</div>
+    <div id="speakMission"></div>
+  </div>
+</section>
+
+<section id="pair" class="screen">
+  <div class="card">
+    <button class="secondary back" onclick="show('home')">← Map</button>
+    <span class="badge" style="background:#fff3e5;color:#8b4d10">MISSION 4 • BUDDY TALK</span>
+    <h2>🤝 Buddy School</h2>
+    <div class="instruction"><b>Work in pairs.</b> Student A starts the conversation. Student B responds. Then switch roles. Try to sound natural, not like you are reading a test.</div>
+    <div class="pair">
+      <div class="person"><h3>🧑 Student A</h3><p>Choose one:</p><select id="aLine" style="width:100%;padding:12px;border-radius:12px;border:2px solid #dbe5ef"><option>Hey! How's it going?</option><option>What's up?</option><option>Hi! How are you doing?</option><option>Hey! What's new?</option></select></div>
+      <div class="person"><h3>🧑 Student B</h3><p>Choose a natural response:</p><select id="bLine" style="width:100%;padding:12px;border-radius:12px;border:2px solid #dbe5ef"><option>Pretty good! How about you?</option><option>Not much. You?</option><option>I'm doing great! And you?</option><option>Nothing much. What's up with you?</option></select></div>
+    </div>
+    <div class="mission" style="margin-top:14px">
+      <h3>🎬 Perform</h3>
+      <p>Face your partner and perform the conversation. You can use the recording buttons below to listen back to your performance.</p>
+      <button class="darkbtn" onclick="pairRecord()">🎙️ Record Pair Conversation</button>
+      <button class="secondary" onclick="pairStop()">⏹ Stop</button>
+      <button class="secondary" onclick="pairPlay()">▶ Play</button>
+      <div id="pairStatus" class="feedback info">Ready when you are.</div>
+    </div>
+    <div class="row" style="margin-top:14px"><button class="primary" onclick="finishPair()">✓ We Completed the Conversation</button></div>
+  </div>
+</section>
+
+<section id="festival" class="screen">
+  <div class="card hero">
+    <span class="badge">QUEST COMPLETE</span>
+    <h1>🏆 Greeting Festival!</h1>
+    <p>You completed the Casual Greetings speaking adventure.</p>
+    <div class="scoreBox"><div>Total XP</div><div class="scoreNum" id="finalXP">0</div><div>⭐ Great work!</div></div>
+    <div style="margin-top:15px" class="instruction">
+      <b>Reflection:</b> Which casual greeting would you use with a friend tomorrow? Why?
+    </div>
+    <textarea id="reflection" placeholder="Write your answer here..."></textarea>
+    <div class="row" style="margin-top:12px"><button class="primary" onclick="saveReflection()">💾 Save Reflection</button><button class="secondary" onclick="show('home')">🗺️ Back to Map</button></div>
+  </div>
+</section>
+
+</main>
+<div id="toast" class="toast"></div>
+
+<script>
+const state={xp:0,badges:0,forest:false,video:false,speaking:false,pair:false,recorder:null,chunks:[],audioUrl:null};
+const speakItems=[
+ {text:"Hey! How's it going?", tip:"Use a friendly, relaxed tone."},
+ {text:"What's up?", tip:"Keep it short and natural."},
+ {text:"Hi! How are you doing?", tip:"Try to connect the words smoothly."},
+ {text:"What's new?", tip:"This is casual and friendly."}
+];
+let speakIndex=0, recognition=null, recStart=0, currentTranscript="";
+
+function $(id){return document.getElementById(id)}
+function show(id){
+ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+ $(id).classList.add('active');
+ window.scrollTo({top:0,behavior:'smooth'});
+ if(id==='forest') buildQuiz();
+ if(id==='video') buildVideo();
+ if(id==='practice') buildSpeaking();
+ updateMap();
+}
+function toast(t){const x=$('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',2200)}
+function addXP(n){state.xp+=n;$('xp').textContent=state.xp;$('finalXP').textContent=state.xp}
+function badge(){state.badges++;$('badges').textContent=state.badges}
+function startQuest(){show('forest')}
+function openPractice(){ if(state.video) show('practice'); else {toast("Finish Video Camp first!");show('video')} }
+function openPair(){ if(state.speaking) show('pair'); else {toast("Complete Speaking Camp first!");show('practice')} }
+function updateMap(){
+ $('practiceLoc').classList.toggle('locked',!state.video);
+ $('pairLoc').classList.toggle('locked',!state.speaking);
+ $('finishLoc').classList.toggle('locked',!state.pair);
+ const done=[state.forest,state.video,state.speaking,state.pair].filter(Boolean).length;
+ $('mapProgress').style.width=(done/4*100)+'%';
+ $('progressText').textContent=done===4?'All missions complete!':`${done}/4 missions complete — keep exploring.`;
+}
+function buildQuiz(){
+ const qs=[
+  {q:"A: “What's up?”  B: ______",opts:["Not much. You?","Good morning, teacher.","See you yesterday."],ans:0},
+  {q:"A: “How's it going?”  B: ______",opts:["Pretty good!","My name is Rina.","Good night, everyone."],ans:0},
+  {q:"A: “Hey!”  B: ______",opts:["Hey!","I am 14 years old.","Thank you for the food."],ans:0}
+ ];
+ let i=0,score=0;
+ const area=$('quizArea');
+ function render(){
+  const x=qs[i];area.innerHTML=`<h3>${i+1}. ${x.q}</h3><div class="choiceGrid">${x.opts.map((o,j)=>`<button class="choice" onclick="answerQuiz(${j})">${o}</button>`).join('')}</div><div id="qfeed"></div>`;
+  window.answerQuiz=(j)=>{
+   const btns=document.querySelectorAll('#quizArea .choice');
+   btns.forEach((b,k)=>{b.disabled=true;if(k===x.ans)b.classList.add('correct');if(k===j&&j!==x.ans)b.classList.add('wrong')});
+   $('qfeed').innerHTML=j===x.ans?'<div class="feedback good">✅ Correct! That response sounds natural.</div>':'<div class="feedback bad">❌ Not quite. Try a casual response that keeps the conversation going.</div>';
+   if(j===x.ans){score++;addXP(10)}
+   setTimeout(()=>{i++;if(i<qs.length)render();else{state.forest=true;badge();addXP(10);area.innerHTML=`<div class="feedback good">🌳 Forest cleared! Score: ${score}/${qs.length}. You unlocked Video Camp.</div><button class="primary" onclick="show('video')" style="margin-top:12px">Go to Video Camp →</button>`;updateMap()}},700);
+  };
+ }
+ render();
+}
+let videoCorrect = new Set();
+function buildVideo(){
+ const c=$('videoChoices');
+ videoCorrect = new Set();
+ $('videoFeedback').innerHTML='';
+ $('videoProgress').textContent='0 / 2 correct greetings';
+ c.innerHTML=['Hey','What’s up?','Thank you very much','Goodbye'].map((x,i)=>`<button class="choice" data-v="${i}" onclick="videoChoice(${i})">${x}</button>`).join('');
+}
+window.videoChoice=(i)=>{
+ const btns=[...document.querySelectorAll('#videoChoices .choice')];
+ const correct=[0,1].includes(i);
+ const btn=btns[i];
+ if(videoCorrect.has(i)) return;
+ if(correct){
+   videoCorrect.add(i);
+   btn.classList.add('correct');
+   btn.disabled=true;
+   addXP(5);
+   $('videoFeedback').innerHTML=`<div class="feedback good">✅ Correct! <b>${btn.textContent}</b> is a casual greeting.<br>You have found ${videoCorrect.size} of 2.</div>`;
+ }else{
+   btn.classList.add('wrong');
+   $('videoFeedback').innerHTML='<div class="feedback bad">❌ Not this one. Try an expression you could use to start a friendly, informal conversation.</div>';
+   setTimeout(()=>btn.classList.remove('wrong'),700);
+ }
+ $('videoProgress').textContent=`${videoCorrect.size} / 2 correct greetings`;
+ if(videoCorrect.size===2 && !state.video){
+   state.video=true; badge(); addXP(15);
+   $('videoFeedback').innerHTML='<div class="feedback good"><b>🎉 Mission Complete!</b><br>You found both casual greetings. Practice Camp is now unlocked.</div>';
+   updateMap();
+ }
+}
+function buildSpeaking(){
+ const item=speakItems[speakIndex];
+ $('speakMission').innerHTML=`
+  <div class="speakBox">
+   <div class="target">${item.text}</div>
+   <div class="instructionSpeak">🎯 ${item.tip}<br><span class="small" style="color:#a9b8cc">Tap the microphone, say the whole sentence, then tap STOP.</span></div>
+   <button class="recordBtn" id="recordBtn" onclick="toggleRecording()">🎙️</button>
+   <div class="timer" id="timer">READY</div>
+   <div class="transcript"><b>What the browser heard:</b><br><span id="transcript">—</span></div>
+   <div id="pronFeedback"></div>
+   <div class="row" style="justify-content:center;margin-top:12px">
+    <button class="secondary" onclick="playRecording()">▶ Play My Recording</button>
+    <button class="primary" onclick="nextSpeaking()">Next Challenge →</button>
+   </div>
+  </div>`;
+}
+async function toggleRecording(){
+ const btn=$('recordBtn');
+ if(state.recorder && state.recorder.state==='recording'){stopRecording();return}
+ try{
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  state.chunks=[];state.recorder=new MediaRecorder(stream);
+  state.recorder.ondataavailable=e=>{if(e.data.size)state.chunks.push(e.data)};
+  state.recorder.onstop=()=>{
+    stream.getTracks().forEach(t=>t.stop());
+    const blob=new Blob(state.chunks,{type:'audio/webm'});
+    if(state.audioUrl)URL.revokeObjectURL(state.audioUrl);
+    state.audioUrl=URL.createObjectURL(blob);
+    evaluatePronunciation();
+  };
+  state.recorder.start();
+  btn.classList.add('recording');btn.textContent='⏹️';$('timer').textContent='RECORDING…';
+  startRecognition();
+ }catch(e){
+  $('pronFeedback').innerHTML='<div class="feedback bad">🎤 Microphone access was not available. Make sure the site uses HTTPS and allow microphone permission in Chrome.</div>';
+ }
+}
+function stopRecording(){
+ if(state.recorder)state.recorder.stop();
+ if(recognition){try{recognition.stop()}catch(e){}}
+ $('recordBtn').classList.remove('recording');$('recordBtn').textContent='🎙️';$('timer').textContent='CHECKING…';
+ setTimeout(()=>{ $('timer').textContent='DONE'; evaluatePronunciation(); },700);
+}
+function startRecognition(){
+ currentTranscript='';
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){$('transcript').textContent='Speech recognition is not supported in this browser. You can still record and play your voice.';return}
+ recognition=new SR();recognition.lang='en-US';recognition.interimResults=true;recognition.continuous=true;
+ recognition.onresult=e=>{
+  let text='';
+  for(let i=e.resultIndex;i<e.results.length;i++)text+=e.results[i][0].transcript+' ';
+  currentTranscript=text.trim();$('transcript').textContent=currentTranscript||'Listening…';
+ };
+ recognition.onerror=()=>{};
+ try{recognition.start()}catch(e){}
+}
+function normalize(s){return s.toLowerCase().replace(/[^a-z0-9\s']/g,'').replace(/\s+/g,' ').trim()}
+function similarity(a,b){
+ const A=normalize(a).split(' ').filter(Boolean),B=normalize(b).split(' ').filter(Boolean);
+ if(!A.length)return 0;let hit=0;A.forEach(w=>{if(B.includes(w))hit++});return Math.round(hit/Math.max(A.length,B.length)*100);
+}
+function evaluatePronunciation(){
+ const target=speakItems[speakIndex].text;
+ let score=similarity(target,currentTranscript);
+ let title,body,cls;
+ if(!currentTranscript){
+   score=0;
+   title='🔴 I could not hear your sentence';
+   body='Chrome did not return any speech-to-text words. Tap the microphone again, allow microphone access, and say the whole sentence clearly.';
+   cls='bad';
+ }else if(score>=85){
+   title='🟢 Excellent match!';
+   body=`The browser heard almost all of the target words. Match: ${score}%. Your sentence is clear and complete.`;
+   cls='good';
+ }else if(score>=60){
+   title='🟡 Almost there!';
+   body=`The browser heard about ${score}% of the target words. Try again and focus on the missing words.`;
+   cls='info';
+ }else{
+   title='🔴 Try again';
+   body=`The browser matched only ${score}% of the target words. Listen to the target, then say it again slowly and clearly.`;
+   cls='bad';
+ }
+ $('pronFeedback').innerHTML=`<div class="feedback ${cls}">
+   <b>${title}</b><br>${body}
+   <div style="margin-top:8px"><b>Target:</b> ${target}<br><b>You said:</b> ${currentTranscript||'No words detected'}</div>
+   <div class="small" style="margin-top:8px">This is an approximate browser speech-to-text check. It checks whether your spoken words match the target; it is not a professional phoneme-by-phoneme pronunciation score.</div>
+ </div>`;
+ if(score>=60&&!state.speaking){state.speaking=true;badge();addXP(20);updateMap()}
+}
+function playRecording(){if(state.audioUrl)new Audio(state.audioUrl).play();else toast("Record your voice first.")}
+function nextSpeaking(){
+ const feedback=$('pronFeedback');
+ if(!feedback || !feedback.textContent.trim()){
+   toast("🎙️ Record your sentence first and check the feedback.");
+   return;
+ }
+ if(speakIndex<speakItems.length-1){speakIndex++;buildSpeaking();window.scrollTo({top:0,behavior:'smooth'})}
+ else{
+   if(!state.speaking){toast("🔴 Get at least 60% match on the speaking check first.");return}
+   state.speaking=true;show('pair');toast("🎉 Speaking Camp cleared!");
+ }
+}
+async function pairRecord(){
+ try{
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  state.chunks=[];state.recorder=new MediaRecorder(stream);
+  state.recorder.ondataavailable=e=>{if(e.data.size)state.chunks.push(e.data)};
+  state.recorder.onstop=()=>{stream.getTracks().forEach(t=>t.stop());state.audioUrl=URL.createObjectURL(new Blob(state.chunks,{type:'audio/webm'}));$('pairStatus').className='feedback good';$('pairStatus').textContent='✅ Recording saved. Tap Play to listen back.'};
+  state.recorder.start();$('pairStatus').className='feedback info';$('pairStatus').textContent='🔴 Recording… perform your conversation now.';
+ }catch(e){$('pairStatus').className='feedback bad';$('pairStatus').textContent='🎤 Microphone permission is required to record.'}
+}
+function pairStop(){if(state.recorder&&state.recorder.state==='recording')state.recorder.stop()}
+function pairPlay(){if(state.audioUrl)new Audio(state.audioUrl).play();else toast("Record the pair conversation first.")}
+function finishPair(){state.pair=true;badge();addXP(25);show('festival');}
+function saveReflection(){toast("✅ Reflection saved on this device.");localStorage.setItem('greetingReflection',$('reflection').value)}
+updateMap();
+</script>
+</body>
+</html>
